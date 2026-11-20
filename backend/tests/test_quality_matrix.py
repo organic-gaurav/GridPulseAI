@@ -187,3 +187,8 @@ def test_constraint_patch_rejects_unknown_control_fields():
 def test_constraint_patch_rejects_summary_longer_than_five_hundred_chars():
     with pytest.raises(ValidationError):
         ConstraintPatch(summary="x" * 501)
+
+
+def test_policy_request_strips_surrounding_whitespace():
+    request = PolicyRequest(message="  prioritize solar  ")
+    assert request.message == "prioritize solar"
