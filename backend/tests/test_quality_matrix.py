@@ -567,3 +567,10 @@ async def test_operator_access_rejects_incorrect_token(monkeypatch):
     with pytest.raises(HTTPException) as error:
         await require_operator(SimpleNamespace(credentials="wrong-secret"))
     assert error.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_operator_access_accepts_exact_bearer_token(monkeypatch):
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "configured-secret")
+    await require_operator(SimpleNamespace(credentials="configured-secret"))
