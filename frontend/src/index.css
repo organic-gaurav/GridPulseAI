@@ -1,14 +1,83 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-family: Inter, system-ui, -apple-system, sans-serif;
     background-color: #090D16;
     color: #F1F5F9;
+    line-height: 1.5;
   }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"]) {
+    scroll-margin-block: 1rem;
+  }
+
+  :focus-visible {
+    outline: 3px solid #67E8F9;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-160%);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #ECFEFF;
+  color: #082F49;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid #22D3EE;
+  outline-offset: 3px;
+}
+
+.icon-control {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+}
+
+.dashboard-nav-button {
+  min-height: 2.75rem;
 }
 
 @keyframes flowDash {
@@ -20,4 +89,21 @@
 .animate-flow {
   stroke-dasharray: 6 6;
   animation: flowDash 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    caret-color: auto !important;
+  }
+
+  .animate-flow {
+    animation: none;
+    stroke-dasharray: none;
+  }
 }
