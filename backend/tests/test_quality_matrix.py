@@ -510,3 +510,10 @@ def test_anomaly_detector_combines_independent_fault_alerts():
     schedule = [SimpleNamespace(grid_import_kw=56.0) for _ in range(9)]
     state = SimpleNamespace(active_chaos=["hvac_fault", "cloudburst"], sim_hour=8, schedule_24h=schedule, PV_PEAK_KW=60.0)
     assert len(AnomalyDetector().inspect(state)) == 3
+
+
+def test_esg_csv_export_includes_expected_column_headers():
+    entry = EsgLedgerEntry(hour=1, opt_grid_kwh=1, base_grid_kwh=2, pv_kwh=3, opt_cost_usd=4, base_cost_usd=5, cost_saved_usd=1, opt_carbon_kg=6, base_carbon_kg=7, carbon_avoided_kg=1)
+    rows = list(csv.reader(io.StringIO(ledger_to_csv([entry]))))
+    assert rows[0][0] == "Hour"
+    assert rows[0][-1] == "Carbon Avoided (kg CO2eq)"
