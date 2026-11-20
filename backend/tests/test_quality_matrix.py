@@ -147,3 +147,8 @@ def test_constraint_patch_accepts_known_ev_identifier():
 def test_constraint_patch_rejects_unknown_ev_identifier():
     with pytest.raises(ValidationError):
         ConstraintPatch(ev_target_overrides={"EV-9": {"departure_hour": 18}})
+
+
+def test_constraint_patch_rejects_battery_reserve_below_safety_floor():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(battery_min_soc_pct=14.9)
