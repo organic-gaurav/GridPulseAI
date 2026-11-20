@@ -1,5 +1,6 @@
 import json
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,14 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agent.graph import agent_graph
 from app.database import get_db
 from app.models.db_models import AgentDecisionRecord, PolicyRecord
-from app.models.schemas import AgentDecision, AnomalyItem, ConstraintPatch, PolicyRequest, ReasoningTrace
+from app.models.schemas import (
+    AgentDecision,
+    AnomalyItem,
+    ConstraintPatch,
+    PolicyRequest,
+    ReasoningTrace,
+)
+from app.security import require_operator
 from app.services.anomaly_detector import anomaly_detector
 from app.services.digital_twin import twin
 
 router = APIRouter(prefix="/api/agent", tags=["Agent"])
 
 
-@router.post("/policy", response_model=AgentDecision)
+@router.post("/policy", response_model=AgentDecision, dependencies=[Depends(require_operator)])
 async def submit_policy(req: PolicyRequest, db: AsyncSession = Depends(get_db)):
     result = await agent_graph.ainvoke(
         {
@@ -51,71 +59,86 @@ async def submit_policy(req: PolicyRequest, db: AsyncSession = Depends(get_db)):
 
 @router.get("/decisions", response_model=List[AgentDecision])
 async def list_decisions(db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(AgentDecisionRecord).order_by(AgentDecisionRecord.created_at.desc()).limit(30))
-    rows = res.scalars().all()
-    items = []
-    for r in rows:
-        items.append(
-            AgentDecision(
-                id=r.id,
-                created_at=r.created_at.strftime("%H:%M:%S UTC"),
-                title=r.title,
-                tier=r.tier,
-                status=r.status,  # type: ignore
-                rationale=r.rationale,
-                cost_impact_usd=r.cost_impact_usd,
-                carbon_impact_kg=r.carbon_impact_kg,
-                comfort_impact=r.comfort_impact,
-                trace=ReasoningTrace(**json.loads(r.trace_json)),
-            )
+    result = await db.execute(
+        select(AgentDecisionRecord)
+        .order_by(AgentDecisionRecord.created_at.desc())
+        .limit(30)
+    )
+    rows = result.scalars().all()
+    return [
+        AgentDecision(
+            id=row.id,
+            created_at=row.created_at.strftime("%H:%M:%S UTC"),
+            title=row.title,
+            tier=row.tier,
+            status=row.status,  # type: ignore[arg-type]
+            rationale=row.rationale,
+            cost_impact_usd=row.cost_impact_usd,
+            carbon_impact_kg=row.carbon_impact_kg,
+            comfort_impact=row.comfort_impact,
+            trace=ReasoningTrace(**json.loads(row.trace_json)),
         )
-    return items
+        for row in rows
+    ]
 
 
-@router.post("/decisions/{decision_id}/approve", response_model=AgentDecision)
+def _decision_response(record: AgentDecisionRecord, status: str) -> AgentDecision:
+    return AgentDecision(
+        id=record.id,
+        created_at=record.created_at.strftime("%H:%M:%S UTC"),
+        title=record.title,
+        tier=record.tier,
+        status=status,  # type: ignore[arg-type]
+        rationale=record.rationale,
+        cost_impact_usd=record.cost_impact_usd,
+        carbon_impact_kg=record.carbon_impact_kg,
+        comfort_impact=record.comfort_impact,
+        trace=ReasoningTrace(**json.loads(record.trace_json)),
+    )
+
+
+async def _get_pending_human_decision(
+    decision_id: str,
+    db: AsyncSession,
+) -> AgentDecisionRecord:
+    result = await db.execute(
+        select(AgentDecisionRecord).where(AgentDecisionRecord.id == decision_id)
+    )
+    record = result.scalar_one_or_none()
+    if record is None:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    if record.tier != 2 or record.status != "pending":
+        raise HTTPException(
+            status_code=409,
+            detail="Only pending Tier-2 decisions can be approved or rejected",
+        )
+    return record
+
+
+@router.post(
+    "/decisions/{decision_id}/approve",
+    response_model=AgentDecision,
+    dependencies=[Depends(require_operator)],
+)
 async def approve_decision(decision_id: str, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(AgentDecisionRecord).where(AgentDecisionRecord.id == decision_id))
-    rec = res.scalar_one_or_none()
-    if not rec:
-        raise HTTPException(status_code=404, detail="Decision not found")
-    rec.status = "approved"
-    patch = ConstraintPatch(**json.loads(rec.patch_json))
+    record = await _get_pending_human_decision(decision_id, db)
+    patch = ConstraintPatch.model_validate_json(record.patch_json)
     twin.apply_constraint_patch(patch)
+    record.status = "approved"
     await db.commit()
-    return AgentDecision(
-        id=rec.id,
-        created_at=rec.created_at.strftime("%H:%M:%S UTC"),
-        title=rec.title,
-        tier=rec.tier,
-        status="approved",
-        rationale=rec.rationale,
-        cost_impact_usd=rec.cost_impact_usd,
-        carbon_impact_kg=rec.carbon_impact_kg,
-        comfort_impact=rec.comfort_impact,
-        trace=ReasoningTrace(**json.loads(rec.trace_json)),
-    )
+    return _decision_response(record, "approved")
 
 
-@router.post("/decisions/{decision_id}/reject", response_model=AgentDecision)
+@router.post(
+    "/decisions/{decision_id}/reject",
+    response_model=AgentDecision,
+    dependencies=[Depends(require_operator)],
+)
 async def reject_decision(decision_id: str, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(AgentDecisionRecord).where(AgentDecisionRecord.id == decision_id))
-    rec = res.scalar_one_or_none()
-    if not rec:
-        raise HTTPException(status_code=404, detail="Decision not found")
-    rec.status = "rejected"
+    record = await _get_pending_human_decision(decision_id, db)
+    record.status = "rejected"
     await db.commit()
-    return AgentDecision(
-        id=rec.id,
-        created_at=rec.created_at.strftime("%H:%M:%S UTC"),
-        title=rec.title,
-        tier=rec.tier,
-        status="rejected",
-        rationale=rec.rationale,
-        cost_impact_usd=rec.cost_impact_usd,
-        carbon_impact_kg=rec.carbon_impact_kg,
-        comfort_impact=rec.comfort_impact,
-        trace=ReasoningTrace(**json.loads(rec.trace_json)),
-    )
+    return _decision_response(record, "rejected")
 
 
 @router.get("/anomalies", response_model=List[AnomalyItem])
