@@ -410,3 +410,9 @@ def test_photovoltaic_profile_applies_hot_weather_derating_floor():
     twin.outdoor_temp_c = [100.0] * 24
     twin.irradiance_wm2 = [1000.0] * 24
     assert twin.compute_pv_profile()[12] == 45.0
+
+
+def test_photovoltaic_profile_clamps_negative_irradiance_to_zero():
+    twin = DualDigitalTwin()
+    twin.irradiance_wm2 = [-100.0] * 24
+    assert twin.compute_pv_profile() == [0.0] * 24
