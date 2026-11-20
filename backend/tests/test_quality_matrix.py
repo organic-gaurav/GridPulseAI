@@ -281,3 +281,9 @@ def test_battery_reserve_only_patch_remains_tier_one():
     tier, _, patch = SafetyGuardrail().classify_and_validate(ConstraintPatch(battery_min_soc_pct=35))
     assert tier == 1
     assert patch.battery_min_soc_pct == 35
+
+
+def test_pareto_weight_only_patch_remains_tier_one():
+    tier, _, patch = SafetyGuardrail().classify_and_validate(ConstraintPatch(pareto_alpha=0.25))
+    assert tier == 1
+    assert patch.pareto_alpha == 0.25
