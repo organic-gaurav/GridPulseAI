@@ -547,3 +547,13 @@ async def test_operator_access_fails_closed_in_production_without_token(monkeypa
     with pytest.raises(HTTPException) as error:
         await require_operator(None)
     assert error.value.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_operator_access_rejects_missing_credentials_in_production(monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "configured-secret")
+    with pytest.raises(HTTPException) as error:
+        await require_operator(None)
+    assert error.value.status_code == 401
