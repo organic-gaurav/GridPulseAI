@@ -162,3 +162,8 @@ def test_constraint_patch_rejects_battery_reserve_above_policy_limit():
 def test_constraint_patch_accepts_battery_reserve_boundaries():
     assert ConstraintPatch(battery_min_soc_pct=15).battery_min_soc_pct == 15
     assert ConstraintPatch(battery_min_soc_pct=80).battery_min_soc_pct == 80
+
+
+def test_constraint_patch_accepts_pareto_alpha_endpoints():
+    assert ConstraintPatch(pareto_alpha=0).pareto_alpha == 0
+    assert ConstraintPatch(pareto_alpha=1).pareto_alpha == 1
