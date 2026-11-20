@@ -314,3 +314,8 @@ def test_deterministic_parser_maps_cost_priority_to_high_alpha():
 def test_deterministic_parser_extracts_battery_reserve_percentage():
     patch = LLMClient()._deterministic_parse("set battery reserve to 30%")
     assert patch.battery_min_soc_pct == 30.0
+
+
+def test_deterministic_parser_clamps_low_battery_reserve_to_safety_floor():
+    patch = LLMClient()._deterministic_parse("set battery reserve to 10%")
+    assert patch.battery_min_soc_pct == 15.0
