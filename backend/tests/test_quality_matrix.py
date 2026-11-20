@@ -504,3 +504,9 @@ def test_anomaly_detector_flags_grid_import_above_threshold():
     alerts = AnomalyDetector().inspect(state)
     assert len(alerts) == 1
     assert alerts[0].severity == "medium"
+
+
+def test_anomaly_detector_combines_independent_fault_alerts():
+    schedule = [SimpleNamespace(grid_import_kw=56.0) for _ in range(9)]
+    state = SimpleNamespace(active_chaos=["hvac_fault", "cloudburst"], sim_hour=8, schedule_24h=schedule, PV_PEAK_KW=60.0)
+    assert len(AnomalyDetector().inspect(state)) == 3
