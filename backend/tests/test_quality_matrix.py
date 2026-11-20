@@ -74,3 +74,8 @@ def test_gemini_key_is_selected_when_other_provider_keys_are_missing():
 def test_zone_temperature_schema_accepts_documented_limits():
     zone = ZoneTempOverride(t_min=18.0, t_max=26.5)
     assert (zone.t_min, zone.t_max) == (18.0, 26.5)
+
+
+def test_zone_temperature_schema_rejects_too_low_minimum():
+    with pytest.raises(ValidationError):
+        ZoneTempOverride(t_min=17.99)
