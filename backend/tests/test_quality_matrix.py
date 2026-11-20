@@ -293,3 +293,9 @@ def test_zone_override_with_only_maximum_is_tier_two():
     patch = ConstraintPatch(zone_temp_overrides={"Zone B": {"t_max": 25.0}})
     tier, _, _ = SafetyGuardrail().classify_and_validate(patch)
     assert tier == 2
+
+
+def test_load_shedding_reason_is_specific_when_combined_with_zone_change():
+    patch = ConstraintPatch(zone_temp_overrides={"Zone A": {"t_min": 20.0}}, shed_deferrable=True)
+    _, impact, _ = SafetyGuardrail().classify_and_validate(patch)
+    assert impact == "Shedding Non-Critical Deferrable Load"
