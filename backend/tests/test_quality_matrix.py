@@ -222,3 +222,7 @@ def test_pareto_request_rejects_alpha_outside_unit_interval():
 def test_pareto_request_rejects_non_finite_alpha():
     with pytest.raises(ValidationError):
         ParetoUpdateRequest(alpha=float("nan"))
+
+
+def test_chaos_request_accepts_reset_event():
+    assert ChaosRequest(event="reset").event == "reset"
