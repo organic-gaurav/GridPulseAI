@@ -269,3 +269,9 @@ def test_temperature_override_requires_human_approval():
     tier, impact, _ = SafetyGuardrail().classify_and_validate(patch)
     assert tier == 2
     assert "Thermal" in impact
+
+
+def test_deferrable_load_shedding_requires_human_approval():
+    tier, impact, _ = SafetyGuardrail().classify_and_validate(ConstraintPatch(shed_deferrable=True))
+    assert tier == 2
+    assert "Shedding" in impact
