@@ -386,3 +386,7 @@ def test_digital_twin_initializes_twenty_four_hour_forecast_profiles():
 
 def test_digital_twin_initializes_three_thermal_zones():
     assert len(DualDigitalTwin().zones) == 3
+
+
+def test_digital_twin_initializes_three_ev_chargers():
+    assert len(DualDigitalTwin().ev_chargers) == 3
