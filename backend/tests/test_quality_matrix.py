@@ -373,3 +373,7 @@ async def test_policy_compiler_uses_local_parser_when_no_llm_client_is_configure
 
 def test_digital_twin_starts_at_eight_simulation_hours():
     assert DualDigitalTwin().sim_hour == 8
+
+
+def test_digital_twin_starts_paused():
+    assert DualDigitalTwin().is_running is False
