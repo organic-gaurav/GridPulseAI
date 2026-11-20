@@ -1,5 +1,6 @@
 from typing import Dict, List, Literal, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ZoneState(BaseModel):
@@ -56,15 +57,14 @@ class TwinSnapshot(BaseModel):
     sim_hour: int
     is_running: bool
     tick_seconds: float
-    pareto_alpha: float  # 0.0 = Carbon-Zero, 1.0 = Cost-First
+    pareto_alpha: float
     active_chaos: List[str]
     feed_status: FeedStatus
 
-    # Live Power Flows (kW)
     pv_kw: float
     grid_import_kw: float
     base_grid_import_kw: float
-    battery_power_kw: float  # positive = discharging, negative = charging
+    battery_power_kw: float
     battery_soc_pct: float
     battery_capacity_kwh: float
     hvac_total_kw: float
@@ -75,7 +75,6 @@ class TwinSnapshot(BaseModel):
     carbon_intensity: float
     tariff_usd_kwh: float
 
-    # Cumulative KPIs
     opt_total_cost_usd: float
     base_total_cost_usd: float
     cost_saved_usd: float
@@ -91,19 +90,44 @@ class TwinSnapshot(BaseModel):
     peak_shaved_kw: float
     solar_self_consumption_pct: float
 
-    # Subsystems
     zones: List[ZoneState]
     ev_chargers: List[EVChargerState]
     schedule_24h: List[HourlySchedulePoint]
 
 
+class ZoneTempOverride(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
+    t_min: Optional[float] = Field(default=None, ge=18.0, le=24.0)
+    t_max: Optional[float] = Field(default=None, ge=20.0, le=26.5)
+
+    @model_validator(mode="after")
+    def validate_temperature_band(self):
+        if self.t_min is not None and self.t_max is not None and self.t_min >= self.t_max:
+            raise ValueError("t_min must be lower than t_max")
+        return self
+
+
+class EVTargetOverride(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
+    departure_hour: Optional[int] = Field(default=None, ge=1, le=23)
+    target_kwh: Optional[float] = Field(default=None, ge=10.0, le=80.0)
+
+
 class ConstraintPatch(BaseModel):
-    zone_temp_overrides: Optional[Dict[str, Dict[str, float]]] = None  # e.g. {"Zone A": {"t_min": 21.0, "t_max": 24.0}}
-    ev_target_overrides: Optional[Dict[str, Dict[str, float]]] = None  # e.g. {"EV-1": {"departure_hour": 16, "target_kwh": 45.0}}
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False, str_strip_whitespace=True)
+
+    zone_temp_overrides: Optional[
+        Dict[Literal["Zone A", "Zone B", "Zone C"], ZoneTempOverride]
+    ] = None
+    ev_target_overrides: Optional[
+        Dict[Literal["EV-1", "EV-2", "EV-3"], EVTargetOverride]
+    ] = None
     battery_min_soc_pct: Optional[float] = Field(default=None, ge=15.0, le=80.0)
     pareto_alpha: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     shed_deferrable: Optional[bool] = None
-    summary: str = ""
+    summary: str = Field(default="", max_length=500)
 
 
 class ReasoningTrace(BaseModel):
@@ -118,7 +142,7 @@ class AgentDecision(BaseModel):
     id: str
     created_at: str
     title: str
-    tier: int  # 1 = Autonomous, 2 = HITL
+    tier: int
     status: Literal["executed", "pending", "approved", "rejected"]
     rationale: str
     cost_impact_usd: float
@@ -139,18 +163,26 @@ class AnomalyItem(BaseModel):
 
 
 class PolicyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
     message: str = Field(..., min_length=2, max_length=500)
 
 
 class ParetoUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
     alpha: float = Field(..., ge=0.0, le=1.0)
 
 
 class ChaosRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     event: Literal["heatwave", "cloudburst", "carbon_spike", "hvac_fault", "urgent_ev", "reset"]
 
 
 class ClockControlRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
     action: Literal["play", "pause", "step", "reset"]
     tick_seconds: Optional[float] = Field(default=None, ge=0.5, le=10.0)
 
