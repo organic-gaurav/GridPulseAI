@@ -416,3 +416,12 @@ def test_photovoltaic_profile_clamps_negative_irradiance_to_zero():
     twin = DualDigitalTwin()
     twin.irradiance_wm2 = [-100.0] * 24
     assert twin.compute_pv_profile() == [0.0] * 24
+
+
+def test_digital_twin_reset_restores_default_control_parameters():
+    twin = DualDigitalTwin()
+    twin.pareto_alpha = 0.9
+    twin.shed_deferrable = True
+    twin.reset()
+    assert twin.pareto_alpha == 0.5
+    assert twin.shed_deferrable is False
