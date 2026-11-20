@@ -231,3 +231,8 @@ def test_chaos_request_accepts_reset_event():
 def test_chaos_request_rejects_unknown_event():
     with pytest.raises(ValidationError):
         ChaosRequest(event="power_cut")
+
+
+def test_clock_request_accepts_each_documented_action():
+    for action in ("play", "pause", "step", "reset"):
+        assert ClockControlRequest(action=action).action == action
