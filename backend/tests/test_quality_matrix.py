@@ -107,3 +107,8 @@ def test_zone_temperature_schema_allows_maximum_only_patch():
 def test_ev_target_schema_accepts_departure_hour_boundaries():
     assert EVTargetOverride(departure_hour=1, target_kwh=10).departure_hour == 1
     assert EVTargetOverride(departure_hour=23, target_kwh=80).target_kwh == 80
+
+
+def test_ev_target_schema_rejects_departure_before_one():
+    with pytest.raises(ValidationError):
+        EVTargetOverride(departure_hour=0)
