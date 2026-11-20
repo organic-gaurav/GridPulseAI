@@ -117,3 +117,8 @@ def test_ev_target_schema_rejects_departure_before_one():
 def test_ev_target_schema_rejects_departure_after_twenty_three():
     with pytest.raises(ValidationError):
         EVTargetOverride(departure_hour=24)
+
+
+def test_ev_target_schema_rejects_target_below_ten_kwh():
+    with pytest.raises(ValidationError):
+        EVTargetOverride(target_kwh=9.9)
