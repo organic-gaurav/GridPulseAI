@@ -8,7 +8,7 @@ export function KpiStrip({ snapshot }: { snapshot: TwinSnapshot }) {
       value: `${snapshot.grid_import_kw.toFixed(1)} kW`,
       sub: `Baseline: ${snapshot.base_grid_import_kw.toFixed(1)} kW`,
       icon: Zap,
-      color: "text-rose-400",
+      color: "text-rose-300",
       bg: "bg-rose-500/10 border-rose-500/20",
     },
     {
@@ -16,7 +16,7 @@ export function KpiStrip({ snapshot }: { snapshot: TwinSnapshot }) {
       value: `$${snapshot.cost_saved_usd.toFixed(2)}`,
       sub: `${snapshot.cost_saved_pct.toFixed(1)}% vs. Baseline`,
       icon: DollarSign,
-      color: "text-emerald-400",
+      color: "text-emerald-300",
       bg: "bg-emerald-500/10 border-emerald-500/20",
     },
     {
@@ -24,7 +24,7 @@ export function KpiStrip({ snapshot }: { snapshot: TwinSnapshot }) {
       value: `${snapshot.carbon_avoided_kg.toFixed(1)} kg`,
       sub: `${snapshot.carbon_avoided_pct.toFixed(1)}% reduction`,
       icon: Leaf,
-      color: "text-cyan-400",
+      color: "text-cyan-300",
       bg: "bg-cyan-500/10 border-cyan-500/20",
     },
     {
@@ -32,31 +32,31 @@ export function KpiStrip({ snapshot }: { snapshot: TwinSnapshot }) {
       value: `${snapshot.peak_shaved_kw.toFixed(1)} kW`,
       sub: `Solar Self-Use: ${snapshot.solar_self_consumption_pct.toFixed(0)}%`,
       icon: Gauge,
-      color: "text-amber-400",
+      color: "text-amber-300",
       bg: "bg-amber-500/10 border-amber-500/20",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <section aria-label="Key performance indicators" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {cards.map((c) => {
         const Icon = c.icon;
         return (
-          <div
+          <article
             key={c.label}
             className="bg-[#111827]/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between"
           >
             <div>
-              <p className="text-xs text-slate-400 font-medium">{c.label}</p>
+              <h2 className="text-sm text-slate-300 font-medium">{c.label}</h2>
               <p className="text-2xl font-bold tabular-nums text-white mt-1">{c.value}</p>
-              <p className="text-[11px] text-slate-400 mt-0.5 tabular-nums">{c.sub}</p>
+              <p className="text-xs text-slate-300 mt-1 tabular-nums">{c.sub}</p>
             </div>
-            <div className={`h-10 w-10 rounded-lg border flex items-center justify-center ${c.bg}`}>
+            <div aria-hidden="true" className={`h-10 w-10 rounded-lg border flex items-center justify-center ${c.bg}`}>
               <Icon className={`h-5 w-5 ${c.color}`} />
             </div>
-          </div>
+          </article>
         );
       })}
-    </div>
+    </section>
   );
 }
