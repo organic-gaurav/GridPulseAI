@@ -182,3 +182,8 @@ def test_constraint_patch_rejects_pareto_alpha_above_one():
 def test_constraint_patch_rejects_unknown_control_fields():
     with pytest.raises(ValidationError):
         ConstraintPatch(unapproved_switch=True)
+
+
+def test_constraint_patch_rejects_summary_longer_than_five_hundred_chars():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(summary="x" * 501)
