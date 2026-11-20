@@ -425,3 +425,11 @@ def test_digital_twin_reset_restores_default_control_parameters():
     twin.reset()
     assert twin.pareto_alpha == 0.5
     assert twin.shed_deferrable is False
+
+
+def test_heatwave_fault_increases_forecast_temperature_by_seven_degrees(monkeypatch):
+    twin = DualDigitalTwin()
+    monkeypatch.setattr(twin, "reoptimize", lambda: None)
+    before = list(twin.outdoor_temp_c)
+    twin.inject_chaos("heatwave")
+    assert twin.outdoor_temp_c == [value + 7.0 for value in before]
