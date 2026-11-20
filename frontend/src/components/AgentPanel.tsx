@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { AlertCircle, Bot, Check, Eye, Send, ShieldAlert, X } from "lucide-react";
 import { AgentDecision, AnomalyItem } from "../types/grid";
 
@@ -18,6 +18,13 @@ const PRESETS = [
   "Prioritize EV-1 Fleet Van ready by 3 PM",
 ];
 
+type AgentTab = "hitl" | "chat" | "anomalies";
+const TABS: { id: AgentTab; label: string; icon: typeof ShieldAlert }[] = [
+  { id: "hitl", label: "Approvals", icon: ShieldAlert },
+  { id: "chat", label: "Policy Chat", icon: Bot },
+  { id: "anomalies", label: "Anomalies", icon: AlertCircle },
+];
+
 export function AgentPanel({
   decisions,
   anomalies,
@@ -26,194 +33,225 @@ export function AgentPanel({
   onReject,
   onInspect,
 }: Props) {
-  const [tab, setTab] = useState<"hitl" | "chat" | "anomalies">("hitl");
+  const [tab, setTab] = useState<AgentTab>("hitl");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-
+  const [message, setMessage] = useState("");
   const pending = decisions.filter((d) => d.status === "pending");
 
   async function handleSend(msg: string) {
     if (!msg.trim() || busy) return;
     setBusy(true);
+    setMessage("Submitting policy…");
     try {
       await onSubmitPolicy(msg.trim());
       setInput("");
+      setMessage("Policy submitted successfully.");
+    } catch {
+      setMessage("The policy could not be submitted. Check the connection and try again.");
     } finally {
       setBusy(false);
     }
   }
 
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, current: AgentTab) {
+    const currentIndex = TABS.findIndex((item) => item.id === current);
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % TABS.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + TABS.length) % TABS.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = TABS.length - 1;
+    else return;
+
+    event.preventDefault();
+    const nextTab = TABS[nextIndex].id;
+    setTab(nextTab);
+    document.getElementById(`agent-tab-${nextTab}`)?.focus();
+  }
+
   return (
-    <div className="bg-[#111827]/90 border border-slate-800 rounded-xl flex flex-col h-full min-h-[520px]">
-      {/* Tabs */}
-      <div className="flex border-b border-slate-800 text-xs font-medium">
-        <button
-          onClick={() => setTab("hitl")}
-          className={`flex-1 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 transition ${
-            tab === "hitl" ? "border-cyan-400 text-cyan-300" : "border-transparent text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <ShieldAlert className="h-3.5 w-3.5" />
-          Approvals ({pending.length})
-        </button>
-        <button
-          onClick={() => setTab("chat")}
-          className={`flex-1 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 transition ${
-            tab === "chat" ? "border-cyan-400 text-cyan-300" : "border-transparent text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <Bot className="h-3.5 w-3.5" />
-          Policy Chat
-        </button>
-        <button
-          onClick={() => setTab("anomalies")}
-          className={`flex-1 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 transition ${
-            tab === "anomalies"
-              ? "border-rose-400 text-rose-300"
-              : "border-transparent text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <AlertCircle className="h-3.5 w-3.5" />
-          Anomalies ({anomalies.length})
-        </button>
+    <section aria-labelledby="agent-panel-heading" className="bg-[#111827]/90 border border-slate-800 rounded-xl flex flex-col h-full min-h-[520px]">
+      <h2 id="agent-panel-heading" className="sr-only">AI agent operations</h2>
+      <div role="tablist" aria-label="AI agent tools" className="flex border-b border-slate-700 text-sm font-medium">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const active = tab === id;
+          const count = id === "hitl" ? pending.length : id === "anomalies" ? anomalies.length : null;
+          return (
+            <button
+              key={id}
+              id={`agent-tab-${id}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls="agent-tabpanel"
+              tabIndex={active ? 0 : -1}
+              onClick={() => setTab(id)}
+              onKeyDown={(event) => handleTabKeyDown(event, id)}
+              className={`flex-1 min-h-12 py-3 px-2 flex items-center justify-center gap-1.5 border-b-2 transition ${active ? "border-cyan-300 text-cyan-100" : "border-transparent text-slate-300 hover:text-white"}`}
+            >
+              <Icon aria-hidden="true" focusable="false" className="h-4 w-4" />
+              <span>{label}{count !== null ? ` (${count})` : ""}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-3 overflow-y-auto space-y-2.5">
+      <div
+        id="agent-tabpanel"
+        role="tabpanel"
+        aria-labelledby={`agent-tab-${tab}`}
+        tabIndex={0}
+        className="flex-1 p-3 overflow-y-auto space-y-3"
+      >
         {tab === "hitl" && (
           <>
             {decisions.length === 0 ? (
-              <div className="text-xs text-slate-400 text-center py-8">
-                No agent decisions yet. Try submitting a policy in Policy Chat!
-              </div>
+              <p className="text-sm text-slate-300 text-center py-8">
+                No agent decisions yet. Try submitting a policy in Policy Chat.
+              </p>
             ) : (
               decisions.map((d) => (
-                <div key={d.id} className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-2">
+                <article key={d.id} className="bg-slate-900/90 border border-slate-700 rounded-lg p-3 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-xs font-semibold text-white">{d.title}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{d.rationale}</div>
+                      <h3 className="text-sm font-semibold text-white">{d.title}</h3>
+                      <p className="text-sm text-slate-300 mt-1">{d.rationale}</p>
                     </div>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                      className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${
                         d.status === "pending"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          ? "bg-amber-500/20 text-amber-100 border border-amber-400/50"
                           : d.status === "executed" || d.status === "approved"
-                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                          : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                          ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
+                          : "bg-rose-500/20 text-rose-100 border border-rose-400/50"
                       }`}
                     >
                       {d.status.toUpperCase()}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 text-[10px]">
-                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Tier {d.tier}</span>
-                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300">
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="px-2 py-1 rounded bg-slate-800 text-slate-100">Tier {d.tier}</span>
+                    <span className="px-2 py-1 rounded bg-slate-800 text-emerald-100">
                       CO₂: {d.carbon_impact_kg >= 0 ? `-${d.carbon_impact_kg}` : `+${Math.abs(d.carbon_impact_kg)}`} kg
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">{d.comfort_impact}</span>
+                    <span className="px-2 py-1 rounded bg-slate-800 text-cyan-100">{d.comfort_impact}</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <button
+                      type="button"
                       onClick={() => onInspect(d)}
-                      className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                      className="min-h-10 px-2 text-sm text-cyan-200 hover:text-white flex items-center gap-2"
                     >
-                      <Eye className="h-3 w-3" /> Trace
+                      <Eye aria-hidden="true" focusable="false" className="h-4 w-4" /> Inspect reasoning trace
                     </button>
                     {d.status === "pending" && (
-                      <div className="flex gap-1.5">
+                      <div className="flex flex-wrap gap-2">
                         <button
+                          type="button"
                           onClick={() => onApprove(d.id)}
-                          className="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] flex items-center gap-1"
+                          className="min-h-10 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 border border-emerald-400/50 text-sm flex items-center gap-2"
                         >
-                          <Check className="h-3 w-3" /> Approve
+                          <Check aria-hidden="true" focusable="false" className="h-4 w-4" /> Approve
                         </button>
                         <button
+                          type="button"
                           onClick={() => onReject(d.id)}
-                          className="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] flex items-center gap-1"
+                          className="min-h-10 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-400/50 text-sm flex items-center gap-2"
                         >
-                          <X className="h-3 w-3" /> Reject
+                          <X aria-hidden="true" focusable="false" className="h-4 w-4" /> Reject
                         </button>
                       </div>
                     )}
                   </div>
-                </div>
+                </article>
               ))
             )}
           </>
         )}
 
         {tab === "chat" && (
-          <div className="flex flex-col h-full justify-between space-y-3">
-            <div className="space-y-2">
-              <p className="text-[11px] text-slate-400">
-                Type an operational policy in plain English or click a preset:
+          <div className="flex flex-col h-full justify-between space-y-4">
+            <div className="space-y-3">
+              <p className="text-sm text-slate-300">
+                Type an operational policy in plain English or choose a suggested policy:
               </p>
-              <div className="grid grid-cols-1 gap-1.5">
-                {PRESETS.map((p) => (
+              <div className="grid grid-cols-1 gap-2">
+                {PRESETS.map((preset) => (
                   <button
-                    key={p}
-                    onClick={() => handleSend(p)}
+                    key={preset}
+                    type="button"
+                    onClick={() => handleSend(preset)}
                     disabled={busy}
-                    className="text-left text-[11px] px-2.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition"
+                    className="min-h-11 text-left text-sm px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-100 transition"
                   >
-                    “{p}”
+                    “{preset}”
                   </button>
                 ))}
               </div>
             </div>
 
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
+              onSubmit={(event) => {
+                event.preventDefault();
                 handleSend(input);
               }}
-              className="flex gap-2 pt-2 border-t border-slate-800"
+              className="flex flex-wrap gap-2 pt-3 border-t border-slate-700"
             >
+              <label htmlFor="agent-policy-input" className="sr-only">Operational policy instruction</label>
               <input
+                id="agent-policy-input"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="e.g. Keep 35% battery reserve..."
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="e.g. Keep 35% battery reserve…"
+                aria-describedby="agent-policy-help"
+                className="min-h-11 flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-300"
               />
               <button
                 type="submit"
-                disabled={busy}
-                className="px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs flex items-center gap-1 disabled:opacity-50"
+                disabled={busy || !input.trim()}
+                aria-label="Submit operational policy"
+                className="min-h-11 min-w-11 px-3 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Send className="h-3.5 w-3.5" />
+                <Send aria-hidden="true" focusable="false" className="h-4 w-4" />
+                <span className="hidden sm:inline">Send</span>
               </button>
+              <p id="agent-policy-help" className="w-full text-xs text-slate-300">
+                Policies are evaluated by the GridPulse AI agent before they are applied.
+              </p>
             </form>
+            <p className="text-sm text-cyan-100" role="status" aria-live="polite" aria-atomic="true">
+              {busy ? "Submitting policy…" : message}
+            </p>
           </div>
         )}
 
         {tab === "anomalies" && (
           <>
             {anomalies.length === 0 ? (
-              <div className="text-xs text-emerald-400 text-center py-8">
+              <p className="text-sm text-emerald-200 text-center py-8">
                 All subsystems nominal. Zero physics-residual anomalies detected.
-              </div>
+              </p>
             ) : (
-              anomalies.map((a) => (
-                <div key={a.id} className="bg-rose-950/30 border border-rose-500/30 rounded-lg p-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-rose-300">{a.anomaly_type}</span>
-                    <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">
-                      {a.severity}
+              anomalies.map((anomaly) => (
+                <article key={anomaly.id} className="bg-rose-950/40 border border-rose-400/50 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-rose-100">{anomaly.anomaly_type}</h3>
+                    <span className="text-xs uppercase px-2 py-1 rounded bg-rose-500/20 text-rose-100 border border-rose-400/40">
+                      {anomaly.severity}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300">{a.description}</p>
-                  <p className="text-[10px] text-rose-400 tabular-nums">
-                    Estimated Waste: {a.estimated_waste_kw.toFixed(1)} kW • Hour {a.sim_hour}:00
+                  <p className="text-sm text-slate-100">{anomaly.description}</p>
+                  <p className="text-sm text-rose-100 tabular-nums">
+                    Estimated waste: {anomaly.estimated_waste_kw.toFixed(1)} kW · Hour {anomaly.sim_hour}:00
                   </p>
-                </div>
+                </article>
               ))
             )}
           </>
         )}
       </div>
-    </div>
+    </section>
   );
 }
