@@ -262,3 +262,10 @@ def test_empty_policy_patch_is_classified_as_autonomous():
     tier, impact, _ = SafetyGuardrail().classify_and_validate(ConstraintPatch())
     assert tier == 1
     assert impact == "None (Autonomous)"
+
+
+def test_temperature_override_requires_human_approval():
+    patch = ConstraintPatch(zone_temp_overrides={"Zone A": {"t_min": 20.0}})
+    tier, impact, _ = SafetyGuardrail().classify_and_validate(patch)
+    assert tier == 2
+    assert "Thermal" in impact
