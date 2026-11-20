@@ -356,3 +356,8 @@ def test_deterministic_parser_converts_evening_ev_departure_to_twenty_four_hour_
 def test_deterministic_parser_sets_ev_target_for_fleet_request():
     patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
     assert patch.ev_target_overrides["EV-1"].target_kwh == 55.0
+
+
+def test_deterministic_parser_keeps_unrecognized_request_as_summary():
+    patch = LLMClient()._deterministic_parse("keep the current lighting schedule")
+    assert patch.summary.startswith("Parsed policy:")
