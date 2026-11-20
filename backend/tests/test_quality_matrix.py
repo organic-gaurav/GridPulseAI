@@ -202,3 +202,8 @@ def test_policy_request_rejects_one_character_message():
 def test_policy_request_rejects_message_over_five_hundred_chars():
     with pytest.raises(ValidationError):
         PolicyRequest(message="x" * 501)
+
+
+def test_policy_request_rejects_unrecognized_fields():
+    with pytest.raises(ValidationError):
+        PolicyRequest(message="prioritize solar", admin=True)
