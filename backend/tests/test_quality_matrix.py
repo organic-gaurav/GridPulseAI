@@ -98,3 +98,7 @@ def test_zone_temperature_schema_rejects_infinite_temperature():
 
 def test_zone_temperature_schema_allows_minimum_only_patch():
     assert ZoneTempOverride(t_min=19.0).t_min == 19.0
+
+
+def test_zone_temperature_schema_allows_maximum_only_patch():
+    assert ZoneTempOverride(t_max=25.0).t_max == 25.0
