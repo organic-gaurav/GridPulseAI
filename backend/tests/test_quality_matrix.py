@@ -217,3 +217,8 @@ def test_pareto_request_accepts_zero_and_one():
 def test_pareto_request_rejects_alpha_outside_unit_interval():
     with pytest.raises(ValidationError):
         ParetoUpdateRequest(alpha=1.001)
+
+
+def test_pareto_request_rejects_non_finite_alpha():
+    with pytest.raises(ValidationError):
+        ParetoUpdateRequest(alpha=float("nan"))
