@@ -127,3 +127,8 @@ def test_ev_target_schema_rejects_target_below_ten_kwh():
 def test_ev_target_schema_rejects_target_above_eighty_kwh():
     with pytest.raises(ValidationError):
         EVTargetOverride(target_kwh=80.1)
+
+
+def test_constraint_patch_accepts_known_zone_identifier():
+    patch = ConstraintPatch(zone_temp_overrides={"Zone A": {"t_min": 20.0}})
+    assert patch.zone_temp_overrides["Zone A"].t_min == 20.0
