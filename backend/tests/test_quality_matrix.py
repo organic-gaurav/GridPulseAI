@@ -441,3 +441,11 @@ def test_cloudburst_fault_reduces_solar_irradiance(monkeypatch):
     before = list(twin.irradiance_wm2)
     twin.inject_chaos("cloudburst")
     assert twin.irradiance_wm2 == [round(value * 0.35, 1) for value in before]
+
+
+def test_carbon_spike_fault_adds_two_hundred_fifty_grams(monkeypatch):
+    twin = DualDigitalTwin()
+    monkeypatch.setattr(twin, "reoptimize", lambda: None)
+    before = list(twin.carbon_intensity)
+    twin.inject_chaos("carbon_spike")
+    assert twin.carbon_intensity == [round(value + 250.0, 1) for value in before]
