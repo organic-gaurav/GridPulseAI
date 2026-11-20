@@ -11,6 +11,8 @@ export function ReasoningModal({ decision, onClose }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!decision) return;
@@ -23,7 +25,7 @@ export function ReasoningModal({ decision, onClose }: Props) {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -40,7 +42,10 @@ export function ReasoningModal({ decision, onClose }: Props) {
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (!dialogRef.current.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -54,7 +59,7 @@ export function ReasoningModal({ decision, onClose }: Props) {
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [decision, onClose]);
+  }, [decision?.id]);
 
   if (!decision) return null;
 
