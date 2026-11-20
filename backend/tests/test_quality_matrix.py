@@ -89,3 +89,8 @@ def test_zone_temperature_schema_rejects_too_high_maximum():
 def test_zone_temperature_schema_rejects_reversed_band():
     with pytest.raises(ValidationError):
         ZoneTempOverride(t_min=24.0, t_max=22.0)
+
+
+def test_zone_temperature_schema_rejects_infinite_temperature():
+    with pytest.raises(ValidationError):
+        ZoneTempOverride(t_min=float("inf"))
