@@ -137,3 +137,8 @@ def test_constraint_patch_accepts_known_zone_identifier():
 def test_constraint_patch_rejects_unknown_zone_identifier():
     with pytest.raises(ValidationError):
         ConstraintPatch(zone_temp_overrides={"Zone D": {"t_min": 20.0}})
+
+
+def test_constraint_patch_accepts_known_ev_identifier():
+    patch = ConstraintPatch(ev_target_overrides={"EV-2": {"departure_hour": 18}})
+    assert patch.ev_target_overrides["EV-2"].departure_hour == 18
