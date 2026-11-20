@@ -13,9 +13,17 @@ import { useGridSocket } from "./hooks/useGridSocket";
 import { api } from "./lib/api";
 import { AgentDecision, AnomalyItem, EsgLedgerEntry } from "./types/grid";
 
+type View = "overview" | "assets" | "esg";
+
+const VIEWS: { id: View; label: string; icon: typeof BarChart3 }[] = [
+  { id: "overview", label: "Command Center", icon: BarChart3 },
+  { id: "assets", label: "Thermal & EV Assets", icon: Cpu },
+  { id: "esg", label: "ESG Audit Ledger", icon: FileSpreadsheet },
+];
+
 export function App() {
   const { snapshot, setSnapshot, connected } = useGridSocket();
-  const [view, setView] = useState<"overview" | "assets" | "esg">("overview");
+  const [view, setView] = useState<View>("overview");
   const [decisions, setDecisions] = useState<AgentDecision[]>([]);
   const [anomalies, setAnomalies] = useState<AnomalyItem[]>([]);
   const [ledger, setLedger] = useState<EsgLedgerEntry[]>([]);
@@ -44,14 +52,23 @@ export function App() {
 
   if (!snapshot) {
     return (
-      <div className="min-h-screen bg-[#090D16] flex items-center justify-center text-slate-400 text-sm">
-        Connecting to GridPulse AI Microgrid Digital Twin...
-      </div>
+      <main className="min-h-screen bg-[#090D16] flex items-center justify-center text-slate-300 text-sm px-6">
+        <p role="status" aria-live="polite" aria-busy="true">
+          Connecting to GridPulse AI Microgrid Digital Twin…
+        </p>
+      </main>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col">
+      <a
+        href="#main-content"
+        className="skip-link"
+      >
+        Skip to main content
+      </a>
+
       <TopBar
         snapshot={snapshot}
         wsConnected={connected}
@@ -68,31 +85,31 @@ export function App() {
         }}
       />
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-slate-800/80 bg-[#0D1320]/50 px-4 flex gap-1">
-        {[
-          { id: "overview", label: "Command Center", icon: BarChart3 },
-          { id: "assets", label: "Thermal & EV Assets", icon: Cpu },
-          { id: "esg", label: "ESG Audit Ledger", icon: FileSpreadsheet },
-        ].map((t) => {
-          const Icon = t.icon;
-          const active = view === t.id;
+      <nav
+        aria-label="Dashboard sections"
+        className="border-b border-slate-800/80 bg-[#0D1320]/50 px-4 flex flex-wrap gap-1"
+      >
+        {VIEWS.map((item) => {
+          const Icon = item.icon;
+          const active = view === item.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setView(t.id as typeof view)}
-              className={`px-4 py-2.5 text-xs font-medium flex items-center gap-2 border-b-2 transition ${
-                active ? "border-cyan-400 text-cyan-300" : "border-transparent text-slate-400 hover:text-slate-200"
+              key={item.id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setView(item.id)}
+              className={`dashboard-nav-button px-4 py-3 text-sm font-medium flex items-center gap-2 border-b-2 transition ${ 
+                active ? "border-cyan-400 text-cyan-200" : "border-transparent text-slate-300 hover:text-white"
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
-              {t.label}
+              <Icon aria-hidden="true" focusable="false" className="h-4 w-4" />
+              {item.label}
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      <main className="flex-1 p-4 max-w-[1600px] w-full mx-auto space-y-4">
+      <main id="main-content" tabIndex={-1} className="flex-1 p-4 max-w-[1600px] w-full mx-auto space-y-4">
         <KpiStrip snapshot={snapshot} />
 
         {view === "overview" && (
@@ -127,7 +144,7 @@ export function App() {
                   await api.approveDecision(id);
                   await refreshAgentData();
                   setSnapshot(await api.getState());
-                  showToast("Tier-2 proposal approved & applied to optimizer");
+                  showToast("Tier-2 proposal approved and applied to optimizer");
                 }}
                 onReject={async (id) => {
                   await api.rejectDecision(id);
@@ -147,7 +164,12 @@ export function App() {
       <ReasoningModal decision={selectedTrace} onClose={() => setSelectedTrace(null)} />
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-slate-900 border border-cyan-500/40 text-cyan-200 px-4 py-2.5 rounded-lg shadow-xl text-xs font-medium">
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="fixed bottom-4 right-4 z-50 bg-slate-900 border border-cyan-500/40 text-cyan-100 px-4 py-3 rounded-lg shadow-xl text-sm"
+        >
           {toast}
         </div>
       )}
