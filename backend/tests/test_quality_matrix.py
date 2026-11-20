@@ -490,3 +490,9 @@ def test_anomaly_detector_marks_cloudburst_as_high_severity():
     alerts = AnomalyDetector().inspect(state)
     assert alerts[0].severity == "high"
     assert alerts[0].estimated_waste_kw > 0
+
+
+def test_anomaly_detector_does_not_flag_grid_import_at_exact_threshold():
+    schedule = [SimpleNamespace(grid_import_kw=55.0) for _ in range(9)]
+    state = SimpleNamespace(active_chaos=[], sim_hour=8, schedule_24h=schedule, PV_PEAK_KW=60.0)
+    assert AnomalyDetector().inspect(state) == []
