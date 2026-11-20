@@ -207,3 +207,8 @@ def test_policy_request_rejects_message_over_five_hundred_chars():
 def test_policy_request_rejects_unrecognized_fields():
     with pytest.raises(ValidationError):
         PolicyRequest(message="prioritize solar", admin=True)
+
+
+def test_pareto_request_accepts_zero_and_one():
+    assert ParetoUpdateRequest(alpha=0).alpha == 0
+    assert ParetoUpdateRequest(alpha=1).alpha == 1
