@@ -537,3 +537,13 @@ async def test_operator_access_allows_local_development_without_token(monkeypatc
     monkeypatch.setattr(settings, "environment", "development")
     monkeypatch.setattr(settings, "api_access_token", "")
     await require_operator(None)
+
+
+@pytest.mark.asyncio
+async def test_operator_access_fails_closed_in_production_without_token(monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "")
+    with pytest.raises(HTTPException) as error:
+        await require_operator(None)
+    assert error.value.status_code == 503
