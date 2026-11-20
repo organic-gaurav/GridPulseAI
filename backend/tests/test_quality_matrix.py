@@ -177,3 +177,8 @@ def test_constraint_patch_rejects_pareto_alpha_below_zero():
 def test_constraint_patch_rejects_pareto_alpha_above_one():
     with pytest.raises(ValidationError):
         ConstraintPatch(pareto_alpha=1.01)
+
+
+def test_constraint_patch_rejects_unknown_control_fields():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(unapproved_switch=True)
