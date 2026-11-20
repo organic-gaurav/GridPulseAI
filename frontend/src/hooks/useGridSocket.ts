@@ -2,6 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { TwinSnapshot } from "../types/grid";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+
+function getWebSocketUrl() {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const defaultBase = `${protocol}//${window.location.host}`;
+  const base = API_BASE_URL
+    ? API_BASE_URL.replace(/^http:/, "ws:").replace(/^https:/, "wss:")
+    : defaultBase;
+  return `${base}/ws/telemetry`;
+}
+
 export function useGridSocket() {
   const [snapshot, setSnapshot] = useState<TwinSnapshot | null>(null);
   const [connected, setConnected] = useState(false);
@@ -9,14 +20,16 @@ export function useGridSocket() {
 
   useEffect(() => {
     let active = true;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
     api.getState().then((data) => {
       if (active) setSnapshot(data);
     }).catch(() => {});
 
     function connect() {
-      const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${proto}//${window.location.host}/ws/telemetry`;
-      const ws = new WebSocket(wsUrl);
+      if (!active) return;
+
+      const ws = new WebSocket(getWebSocketUrl());
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -27,13 +40,16 @@ export function useGridSocket() {
           const parsed = JSON.parse(ev.data) as TwinSnapshot;
           if (active) setSnapshot(parsed);
         } catch {
-          // ignore malformed
+          // Ignore malformed telemetry messages.
         }
+      };
+      ws.onerror = () => {
+        ws.close();
       };
       ws.onclose = () => {
         if (active) {
           setConnected(false);
-          setTimeout(connect, 2500);
+          reconnectTimer = setTimeout(connect, 2500);
         }
       };
     }
@@ -41,6 +57,7 @@ export function useGridSocket() {
     connect();
     return () => {
       active = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       wsRef.current?.close();
     };
   }, []);
