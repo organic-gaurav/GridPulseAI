@@ -351,3 +351,8 @@ def test_deterministic_parser_uses_default_office_temperature_band():
 def test_deterministic_parser_converts_evening_ev_departure_to_twenty_four_hour_time():
     patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
     assert patch.ev_target_overrides["EV-1"].departure_hour == 18
+
+
+def test_deterministic_parser_sets_ev_target_for_fleet_request():
+    patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
+    assert patch.ev_target_overrides["EV-1"].target_kwh == 55.0
