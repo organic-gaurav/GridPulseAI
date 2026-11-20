@@ -152,3 +152,8 @@ def test_constraint_patch_rejects_unknown_ev_identifier():
 def test_constraint_patch_rejects_battery_reserve_below_safety_floor():
     with pytest.raises(ValidationError):
         ConstraintPatch(battery_min_soc_pct=14.9)
+
+
+def test_constraint_patch_rejects_battery_reserve_above_policy_limit():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(battery_min_soc_pct=80.1)
