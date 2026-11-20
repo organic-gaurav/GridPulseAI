@@ -236,3 +236,8 @@ def test_chaos_request_rejects_unknown_event():
 def test_clock_request_accepts_each_documented_action():
     for action in ("play", "pause", "step", "reset"):
         assert ClockControlRequest(action=action).action == action
+
+
+def test_clock_request_rejects_unknown_action():
+    with pytest.raises(ValidationError):
+        ClockControlRequest(action="fast_forward")
