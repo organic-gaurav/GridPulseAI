@@ -324,3 +324,9 @@ def test_deterministic_parser_clamps_low_battery_reserve_to_safety_floor():
 def test_deterministic_parser_clamps_high_battery_reserve_to_policy_ceiling():
     patch = LLMClient()._deterministic_parse("set battery reserve to 90%")
     assert patch.battery_min_soc_pct == 80.0
+
+
+def test_deterministic_parser_builds_precooling_temperature_band():
+    patch = LLMClient()._deterministic_parse("pre-cool Zone A before the afternoon")
+    assert patch.zone_temp_overrides["Zone A"].t_min == 19.5
+    assert patch.zone_temp_overrides["Zone A"].t_max == 23.0
