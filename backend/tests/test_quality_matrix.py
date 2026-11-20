@@ -476,3 +476,10 @@ def test_baseline_hour_returns_grid_hvac_and_ev_metrics():
 def test_anomaly_detector_returns_no_alerts_for_normal_state():
     state = SimpleNamespace(active_chaos=[], sim_hour=8, schedule_24h=[], PV_PEAK_KW=60.0)
     assert AnomalyDetector().inspect(state) == []
+
+
+def test_anomaly_detector_marks_hvac_fault_as_critical():
+    state = SimpleNamespace(active_chaos=["hvac_fault"], sim_hour=8, schedule_24h=[], PV_PEAK_KW=60.0)
+    alerts = AnomalyDetector().inspect(state)
+    assert len(alerts) == 1
+    assert alerts[0].severity == "critical"
