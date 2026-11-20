@@ -94,3 +94,7 @@ def test_zone_temperature_schema_rejects_reversed_band():
 def test_zone_temperature_schema_rejects_infinite_temperature():
     with pytest.raises(ValidationError):
         ZoneTempOverride(t_min=float("inf"))
+
+
+def test_zone_temperature_schema_allows_minimum_only_patch():
+    assert ZoneTempOverride(t_min=19.0).t_min == 19.0
