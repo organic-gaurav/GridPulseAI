@@ -44,3 +44,8 @@ def test_default_carbon_provider_is_uk():
 def test_operator_token_alias_maps_to_gridpulse_api_token():
     configured = Settings(GRIDPULSE_API_TOKEN="test-secret", _env_file=None)
     assert configured.api_access_token == "test-secret"
+
+
+def test_ai_mode_uses_deterministic_fallback_without_provider_key():
+    configured = Settings(openai_api_key="", groq_api_key="", gemini_api_key="", _env_file=None)
+    assert configured.ai_mode == "Deterministic Fallback"
