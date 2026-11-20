@@ -115,7 +115,8 @@ app.add_middleware(
 @app.middleware("http")
 async def security_and_rate_limit(request: Request, call_next):
     path = request.url.path
-    if request.method == "POST" and path in _RATE_LIMIT_PATHS:
+    is_limited_path = path in _RATE_LIMIT_PATHS or path.startswith("/api/agent/decisions/")
+    if request.method == "POST" and is_limited_path:
         remote = request.client.host if request.client else "unknown"
         now = monotonic()
         bucket = _request_times[remote]
@@ -134,6 +135,8 @@ async def security_and_rate_limit(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     if settings.environment == "production":
         response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
