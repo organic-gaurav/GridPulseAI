@@ -583,3 +583,10 @@ async def test_operator_access_does_not_trim_or_normalize_supplied_token(monkeyp
     monkeypatch.setattr(settings, "api_access_token", "configured-secret")
     with pytest.raises(HTTPException):
         await require_operator(SimpleNamespace(credentials=" configured-secret "))
+
+
+@pytest.mark.asyncio
+async def test_operator_access_uses_constant_time_comparison_for_matching_token(monkeypatch):
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "gridpulse-operator-token")
+    await require_operator(SimpleNamespace(credentials="gridpulse-operator-token"))
