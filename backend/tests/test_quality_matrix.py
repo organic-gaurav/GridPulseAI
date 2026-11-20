@@ -590,3 +590,13 @@ async def test_operator_access_uses_constant_time_comparison_for_matching_token(
     monkeypatch.setattr(settings, "environment", "production")
     monkeypatch.setattr(settings, "api_access_token", "gridpulse-operator-token")
     await require_operator(SimpleNamespace(credentials="gridpulse-operator-token"))
+
+
+@pytest.mark.asyncio
+async def test_operator_access_rejects_empty_supplied_token(monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "configured-secret")
+    with pytest.raises(HTTPException) as error:
+        await require_operator(SimpleNamespace(credentials=""))
+    assert error.value.status_code == 401
