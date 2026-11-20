@@ -346,3 +346,8 @@ def test_deterministic_parser_uses_default_office_temperature_band():
     patch = LLMClient()._deterministic_parse("set the office temperature")
     assert patch.zone_temp_overrides["Zone A"].t_min == 21.0
     assert patch.zone_temp_overrides["Zone A"].t_max == 23.5
+
+
+def test_deterministic_parser_converts_evening_ev_departure_to_twenty_four_hour_time():
+    patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
+    assert patch.ev_target_overrides["EV-1"].departure_hour == 18
