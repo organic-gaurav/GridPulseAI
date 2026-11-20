@@ -530,3 +530,10 @@ def test_esg_csv_export_preserves_decimal_precision():
     entry = EsgLedgerEntry(hour=4, opt_grid_kwh=12.75, base_grid_kwh=13.25, pv_kwh=5.5, opt_cost_usd=1.25, base_cost_usd=1.75, cost_saved_usd=0.5, opt_carbon_kg=2.25, base_carbon_kg=3.75, carbon_avoided_kg=1.5)
     rows = list(csv.reader(io.StringIO(ledger_to_csv([entry]))))
     assert rows[1][1:4] == ["12.75", "13.25", "5.5"]
+
+
+@pytest.mark.asyncio
+async def test_operator_access_allows_local_development_without_token(monkeypatch):
+    monkeypatch.setattr(settings, "environment", "development")
+    monkeypatch.setattr(settings, "api_access_token", "")
+    await require_operator(None)
