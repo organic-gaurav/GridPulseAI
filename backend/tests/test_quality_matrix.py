@@ -157,3 +157,8 @@ def test_constraint_patch_rejects_battery_reserve_below_safety_floor():
 def test_constraint_patch_rejects_battery_reserve_above_policy_limit():
     with pytest.raises(ValidationError):
         ConstraintPatch(battery_min_soc_pct=80.1)
+
+
+def test_constraint_patch_accepts_battery_reserve_boundaries():
+    assert ConstraintPatch(battery_min_soc_pct=15).battery_min_soc_pct == 15
+    assert ConstraintPatch(battery_min_soc_pct=80).battery_min_soc_pct == 80
