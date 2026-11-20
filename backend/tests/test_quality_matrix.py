@@ -287,3 +287,9 @@ def test_pareto_weight_only_patch_remains_tier_one():
     tier, _, patch = SafetyGuardrail().classify_and_validate(ConstraintPatch(pareto_alpha=0.25))
     assert tier == 1
     assert patch.pareto_alpha == 0.25
+
+
+def test_zone_override_with_only_maximum_is_tier_two():
+    patch = ConstraintPatch(zone_temp_overrides={"Zone B": {"t_max": 25.0}})
+    tier, _, _ = SafetyGuardrail().classify_and_validate(patch)
+    assert tier == 2
