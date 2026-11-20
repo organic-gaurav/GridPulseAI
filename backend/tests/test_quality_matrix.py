@@ -390,3 +390,9 @@ def test_digital_twin_initializes_three_thermal_zones():
 
 def test_digital_twin_initializes_three_ev_chargers():
     assert len(DualDigitalTwin().ev_chargers) == 3
+
+
+def test_photovoltaic_profile_is_zero_without_irradiance():
+    twin = DualDigitalTwin()
+    twin.irradiance_wm2 = [0.0] * 24
+    assert twin.compute_pv_profile() == [0.0] * 24
