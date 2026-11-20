@@ -251,3 +251,8 @@ def test_clock_request_accepts_tick_interval_endpoints():
 def test_clock_request_rejects_tick_interval_below_minimum():
     with pytest.raises(ValidationError):
         ClockControlRequest(action="play", tick_seconds=0.49)
+
+
+def test_clock_request_rejects_tick_interval_above_maximum():
+    with pytest.raises(ValidationError):
+        ClockControlRequest(action="play", tick_seconds=10.01)
