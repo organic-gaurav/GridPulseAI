@@ -433,3 +433,11 @@ def test_heatwave_fault_increases_forecast_temperature_by_seven_degrees(monkeypa
     before = list(twin.outdoor_temp_c)
     twin.inject_chaos("heatwave")
     assert twin.outdoor_temp_c == [value + 7.0 for value in before]
+
+
+def test_cloudburst_fault_reduces_solar_irradiance(monkeypatch):
+    twin = DualDigitalTwin()
+    monkeypatch.setattr(twin, "reoptimize", lambda: None)
+    before = list(twin.irradiance_wm2)
+    twin.inject_chaos("cloudburst")
+    assert twin.irradiance_wm2 == [round(value * 0.35, 1) for value in before]
