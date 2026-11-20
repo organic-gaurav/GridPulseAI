@@ -69,3 +69,8 @@ def test_groq_key_is_selected_when_openai_key_is_missing():
 def test_gemini_key_is_selected_when_other_provider_keys_are_missing():
     configured = Settings(gemini_api_key="gemini", _env_file=None)
     assert configured.active_llm_key == "gemini"
+
+
+def test_zone_temperature_schema_accepts_documented_limits():
+    zone = ZoneTempOverride(t_min=18.0, t_max=26.5)
+    assert (zone.t_min, zone.t_max) == (18.0, 26.5)
