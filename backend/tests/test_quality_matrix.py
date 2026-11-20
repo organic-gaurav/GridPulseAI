@@ -39,3 +39,8 @@ def test_default_frontend_origin_is_localhost():
 
 def test_default_carbon_provider_is_uk():
     assert Settings(_env_file=None).carbon_provider == "uk_carbon"
+
+
+def test_operator_token_alias_maps_to_gridpulse_api_token():
+    configured = Settings(GRIDPULSE_API_TOKEN="test-secret", _env_file=None)
+    assert configured.api_access_token == "test-secret"
