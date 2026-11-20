@@ -35,3 +35,7 @@ def test_default_settings_use_valid_demo_coordinates():
 
 def test_default_frontend_origin_is_localhost():
     assert Settings(_env_file=None).frontend_origin == "http://localhost:5173"
+
+
+def test_default_carbon_provider_is_uk():
+    assert Settings(_env_file=None).carbon_provider == "uk_carbon"
