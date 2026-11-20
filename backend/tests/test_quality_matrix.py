@@ -84,3 +84,8 @@ def test_zone_temperature_schema_rejects_too_low_minimum():
 def test_zone_temperature_schema_rejects_too_high_maximum():
     with pytest.raises(ValidationError):
         ZoneTempOverride(t_max=26.51)
+
+
+def test_zone_temperature_schema_rejects_reversed_band():
+    with pytest.raises(ValidationError):
+        ZoneTempOverride(t_min=24.0, t_max=22.0)
