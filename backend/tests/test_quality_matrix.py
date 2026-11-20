@@ -456,3 +456,11 @@ def test_urgent_ev_fault_moves_ev_one_departure_four_hours_ahead(monkeypatch):
     monkeypatch.setattr(twin, "reoptimize", lambda: None)
     twin.inject_chaos("urgent_ev")
     assert twin.ev_chargers[0]["departure_hour"] == twin.sim_hour + 4
+
+
+def test_reset_fault_clears_active_chaos(monkeypatch):
+    twin = DualDigitalTwin()
+    monkeypatch.setattr(twin, "reoptimize", lambda: None)
+    twin.active_chaos = ["heatwave", "cloudburst"]
+    twin.inject_chaos("reset")
+    assert twin.active_chaos == []
