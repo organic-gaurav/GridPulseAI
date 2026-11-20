@@ -192,3 +192,8 @@ def test_constraint_patch_rejects_summary_longer_than_five_hundred_chars():
 def test_policy_request_strips_surrounding_whitespace():
     request = PolicyRequest(message="  prioritize solar  ")
     assert request.message == "prioritize solar"
+
+
+def test_policy_request_rejects_one_character_message():
+    with pytest.raises(ValidationError):
+        PolicyRequest(message="x")
