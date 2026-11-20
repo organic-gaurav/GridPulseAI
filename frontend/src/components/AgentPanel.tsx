@@ -5,6 +5,7 @@ import { AgentDecision, AnomalyItem } from "../types/grid";
 interface Props {
   decisions: AgentDecision[];
   anomalies: AnomalyItem[];
+  operatorReady: boolean;
   onSubmitPolicy: (msg: string) => Promise<void>;
   onApprove: (id: string) => Promise<void>;
   onReject: (id: string) => Promise<void>;
@@ -28,6 +29,7 @@ const TABS: { id: AgentTab; label: string; icon: typeof ShieldAlert }[] = [
 export function AgentPanel({
   decisions,
   anomalies,
+  operatorReady,
   onSubmitPolicy,
   onApprove,
   onReject,
@@ -40,7 +42,7 @@ export function AgentPanel({
   const pending = decisions.filter((d) => d.status === "pending");
 
   async function handleSend(msg: string) {
-    if (!msg.trim() || busy) return;
+    if (!operatorReady || !msg.trim() || busy) return;
     setBusy(true);
     setMessage("Submitting policy…");
     try {
@@ -72,6 +74,7 @@ export function AgentPanel({
   return (
     <section aria-labelledby="agent-panel-heading" className="bg-[#111827]/90 border border-slate-800 rounded-xl flex flex-col h-full min-h-[520px]">
       <h2 id="agent-panel-heading" className="sr-only">AI agent operations</h2>
+      {!operatorReady && <p className="px-3 py-2 text-sm text-amber-100 bg-amber-500/10 border-b border-amber-400/30" role="status">Unlock operator controls to submit policies or approve actions. Read-only dashboard data remains available.</p>}
       <div role="tablist" aria-label="AI agent tools" className="flex border-b border-slate-700 text-sm font-medium">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tab === id;
@@ -151,6 +154,7 @@ export function AgentPanel({
                         <button
                           type="button"
                           onClick={() => onApprove(d.id)}
+                          disabled={!operatorReady}
                           className="min-h-10 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 border border-emerald-400/50 text-sm flex items-center gap-2"
                         >
                           <Check aria-hidden="true" focusable="false" className="h-4 w-4" /> Approve
@@ -158,6 +162,7 @@ export function AgentPanel({
                         <button
                           type="button"
                           onClick={() => onReject(d.id)}
+                          disabled={!operatorReady}
                           className="min-h-10 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-400/50 text-sm flex items-center gap-2"
                         >
                           <X aria-hidden="true" focusable="false" className="h-4 w-4" /> Reject
@@ -183,7 +188,7 @@ export function AgentPanel({
                     key={preset}
                     type="button"
                     onClick={() => handleSend(preset)}
-                    disabled={busy}
+                    disabled={busy || !operatorReady}
                     className="min-h-11 text-left text-sm px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-100 transition"
                   >
                     “{preset}”
@@ -202,6 +207,7 @@ export function AgentPanel({
               <label htmlFor="agent-policy-input" className="sr-only">Operational policy instruction</label>
               <input
                 id="agent-policy-input"
+                disabled={!operatorReady}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="e.g. Keep 35% battery reserve…"
@@ -210,7 +216,7 @@ export function AgentPanel({
               />
               <button
                 type="submit"
-                disabled={busy || !input.trim()}
+                disabled={!operatorReady || busy || !input.trim()}
                 aria-label="Submit operational policy"
                 className="min-h-11 min-w-11 px-3 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
