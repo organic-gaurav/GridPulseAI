@@ -449,3 +449,10 @@ def test_carbon_spike_fault_adds_two_hundred_fifty_grams(monkeypatch):
     before = list(twin.carbon_intensity)
     twin.inject_chaos("carbon_spike")
     assert twin.carbon_intensity == [round(value + 250.0, 1) for value in before]
+
+
+def test_urgent_ev_fault_moves_ev_one_departure_four_hours_ahead(monkeypatch):
+    twin = DualDigitalTwin()
+    monkeypatch.setattr(twin, "reoptimize", lambda: None)
+    twin.inject_chaos("urgent_ev")
+    assert twin.ev_chargers[0]["departure_hour"] == twin.sim_hour + 4
