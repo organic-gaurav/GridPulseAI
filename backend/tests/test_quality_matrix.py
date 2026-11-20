@@ -256,3 +256,9 @@ def test_clock_request_rejects_tick_interval_below_minimum():
 def test_clock_request_rejects_tick_interval_above_maximum():
     with pytest.raises(ValidationError):
         ClockControlRequest(action="play", tick_seconds=10.01)
+
+
+def test_empty_policy_patch_is_classified_as_autonomous():
+    tier, impact, _ = SafetyGuardrail().classify_and_validate(ConstraintPatch())
+    assert tier == 1
+    assert impact == "None (Autonomous)"
