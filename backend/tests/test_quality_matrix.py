@@ -299,3 +299,8 @@ def test_load_shedding_reason_is_specific_when_combined_with_zone_change():
     patch = ConstraintPatch(zone_temp_overrides={"Zone A": {"t_min": 20.0}}, shed_deferrable=True)
     _, impact, _ = SafetyGuardrail().classify_and_validate(patch)
     assert impact == "Shedding Non-Critical Deferrable Load"
+
+
+def test_deterministic_parser_prioritizes_carbon():
+    patch = LLMClient()._deterministic_parse("prioritize carbon reduction")
+    assert patch.pareto_alpha == 0.1
