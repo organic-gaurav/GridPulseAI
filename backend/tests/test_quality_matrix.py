@@ -9,7 +9,8 @@ from pydantic import ValidationError
 
 from app.agent.guardrails import SafetyGuardrail
 from app.agent.llm_client import LLMClient
-from app.config import Settings
+from app.config import Settings, settings
+from app.security import require_operator
 from app.models.schemas import (
     ChaosRequest,
     ClockControlRequest,
@@ -30,3 +31,7 @@ def test_default_settings_use_valid_demo_coordinates():
     assert -90 <= settings.latitude <= 90
     assert -180 <= settings.longitude <= 180
     assert settings.environment == "development"
+
+
+def test_default_frontend_origin_is_localhost():
+    assert Settings(_env_file=None).frontend_origin == "http://localhost:5173"
