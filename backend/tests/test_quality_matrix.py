@@ -79,3 +79,8 @@ def test_zone_temperature_schema_accepts_documented_limits():
 def test_zone_temperature_schema_rejects_too_low_minimum():
     with pytest.raises(ValidationError):
         ZoneTempOverride(t_min=17.99)
+
+
+def test_zone_temperature_schema_rejects_too_high_maximum():
+    with pytest.raises(ValidationError):
+        ZoneTempOverride(t_max=26.51)
