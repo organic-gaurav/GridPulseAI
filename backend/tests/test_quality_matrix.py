@@ -471,3 +471,8 @@ def test_baseline_hour_returns_grid_hvac_and_ev_metrics():
     result = twin.compute_baseline_hour(0, 0.0)
     assert set(result) == {"grid_import_kw", "hvac_kw", "ev_kw"}
     assert result["grid_import_kw"] >= 0
+
+
+def test_anomaly_detector_returns_no_alerts_for_normal_state():
+    state = SimpleNamespace(active_chaos=[], sim_hour=8, schedule_24h=[], PV_PEAK_KW=60.0)
+    assert AnomalyDetector().inspect(state) == []
