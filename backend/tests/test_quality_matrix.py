@@ -483,3 +483,10 @@ def test_anomaly_detector_marks_hvac_fault_as_critical():
     alerts = AnomalyDetector().inspect(state)
     assert len(alerts) == 1
     assert alerts[0].severity == "critical"
+
+
+def test_anomaly_detector_marks_cloudburst_as_high_severity():
+    state = SimpleNamespace(active_chaos=["cloudburst"], sim_hour=8, schedule_24h=[], PV_PEAK_KW=60.0)
+    alerts = AnomalyDetector().inspect(state)
+    assert alerts[0].severity == "high"
+    assert alerts[0].estimated_waste_kw > 0
