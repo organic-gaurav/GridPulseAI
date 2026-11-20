@@ -1,23 +1,61 @@
+import pytest
 from fastapi.testclient import TestClient
+
+from app.config import settings
 from app.main import app
 
 
 def test_api_endpoints():
     with TestClient(app) as client:
-        r = client.get("/api/health")
-        assert r.status_code == 200
-        assert r.json()["status"] == "ok"
+        health = client.get("/api/health")
+        assert health.status_code == 200
+        assert health.json()["status"] == "ok"
 
-        r_state = client.get("/api/twin/state")
-        assert r_state.status_code == 200
-        data = r_state.json()
+        state_response = client.get("/api/twin/state")
+        assert state_response.status_code == 200
+        data = state_response.json()
         assert "schedule_24h" in data
         assert len(data["schedule_24h"]) == 24
 
-        r_pareto = client.post("/api/optimizer/pareto", json={"alpha": 0.2})
-        assert r_pareto.status_code == 200
-        assert r_pareto.json()["pareto_alpha"] == 0.2
+        pareto_response = client.post("/api/optimizer/pareto", json={"alpha": 0.2})
+        assert pareto_response.status_code == 200
+        assert pareto_response.json()["pareto_alpha"] == 0.2
 
-        r_pol = client.post("/api/agent/policy", json={"message": "Prioritize carbon zero mode"})
-        assert r_pol.status_code == 200
-        assert r_pol.json()["tier"] == 1
+        policy_response = client.post(
+            "/api/agent/policy",
+            json={"message": "Prioritize carbon zero mode"},
+        )
+        assert policy_response.status_code == 200
+        assert policy_response.json()["tier"] == 1
+
+
+def test_write_routes_require_operator_key_in_production(monkeypatch):
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "test-operator-key")
+
+    with TestClient(app) as client:
+        assert client.get("/api/twin/state").status_code == 200
+        assert client.get("/api/auth/check").status_code == 401
+
+        denied = client.post("/api/optimizer/pareto", json={"alpha": 0.3})
+        assert denied.status_code == 401
+
+        allowed = client.post(
+            "/api/optimizer/pareto",
+            json={"alpha": 0.3},
+            headers={"Authorization": "Bearer test-operator-key"},
+        )
+        assert allowed.status_code == 200
+
+        check = client.get(
+            "/api/auth/check",
+            headers={"Authorization": "Bearer test-operator-key"},
+        )
+        assert check.status_code == 200
+        assert check.json() == {"authenticated": True}
+
+
+def test_invalid_request_body_is_rejected():
+    with TestClient(app) as client:
+        response = client.post("/api/optimizer/pareto", json={"alpha": 1.5})
+        assert response.status_code == 422
