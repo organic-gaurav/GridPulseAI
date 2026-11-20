@@ -361,3 +361,11 @@ def test_deterministic_parser_sets_ev_target_for_fleet_request():
 def test_deterministic_parser_keeps_unrecognized_request_as_summary():
     patch = LLMClient()._deterministic_parse("keep the current lighting schedule")
     assert patch.summary.startswith("Parsed policy:")
+
+
+@pytest.mark.asyncio
+async def test_policy_compiler_uses_local_parser_when_no_llm_client_is_configured():
+    client = LLMClient()
+    client.client = None
+    patch = await client.compile_policy("prioritize carbon")
+    assert patch.pareto_alpha == 0.1
