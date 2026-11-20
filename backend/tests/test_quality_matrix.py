@@ -403,3 +403,10 @@ def test_photovoltaic_profile_reaches_rated_peak_at_reference_conditions():
     twin.outdoor_temp_c = [25.0] * 24
     twin.irradiance_wm2 = [1000.0] * 24
     assert twin.compute_pv_profile() == [60.0] * 24
+
+
+def test_photovoltaic_profile_applies_hot_weather_derating_floor():
+    twin = DualDigitalTwin()
+    twin.outdoor_temp_c = [100.0] * 24
+    twin.irradiance_wm2 = [1000.0] * 24
+    assert twin.compute_pv_profile()[12] == 45.0
