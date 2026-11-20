@@ -574,3 +574,12 @@ async def test_operator_access_accepts_exact_bearer_token(monkeypatch):
     monkeypatch.setattr(settings, "environment", "production")
     monkeypatch.setattr(settings, "api_access_token", "configured-secret")
     await require_operator(SimpleNamespace(credentials="configured-secret"))
+
+
+@pytest.mark.asyncio
+async def test_operator_access_does_not_trim_or_normalize_supplied_token(monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(settings, "environment", "production")
+    monkeypatch.setattr(settings, "api_access_token", "configured-secret")
+    with pytest.raises(HTTPException):
+        await require_operator(SimpleNamespace(credentials=" configured-secret "))
