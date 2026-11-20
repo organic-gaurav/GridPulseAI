@@ -10,7 +10,7 @@ import { PowerFlowDiagram } from "./components/PowerFlowDiagram";
 import { ReasoningModal } from "./components/ReasoningModal";
 import { TopBar } from "./components/TopBar";
 import { useGridSocket } from "./hooks/useGridSocket";
-import { api } from "./lib/api";
+import { api, clearAccessToken, verifyOperatorAccess } from "./lib/api";
 import { AgentDecision, AnomalyItem, EsgLedgerEntry } from "./types/grid";
 
 type View = "overview" | "assets" | "esg";
@@ -29,10 +29,32 @@ export function App() {
   const [ledger, setLedger] = useState<EsgLedgerEntry[]>([]);
   const [selectedTrace, setSelectedTrace] = useState<AgentDecision | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [operatorKey, setOperatorKey] = useState("");
+  const [operatorReady, setOperatorReady] = useState(false);
+  const [operatorMessage, setOperatorMessage] = useState("");
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
+  }
+
+  async function unlockOperator() {
+    try {
+      await verifyOperatorAccess(operatorKey);
+      setOperatorReady(true);
+      setOperatorKey("");
+      setOperatorMessage("Operator controls are unlocked for this tab session.");
+    } catch {
+      setOperatorReady(false);
+      setOperatorMessage("Access key was rejected or operator authentication is not configured on the server.");
+    }
+  }
+
+  function lockOperator() {
+    clearAccessToken();
+    setOperatorReady(false);
+    setOperatorKey("");
+    setOperatorMessage("Operator controls locked.");
   }
 
   async function refreshAgentData() {
@@ -72,6 +94,12 @@ export function App() {
       <TopBar
         snapshot={snapshot}
         wsConnected={connected}
+        operatorReady={operatorReady}
+        operatorKey={operatorKey}
+        operatorMessage={operatorMessage}
+        onOperatorKeyChange={setOperatorKey}
+        onUnlockOperator={unlockOperator}
+        onLockOperator={lockOperator}
         onClock={async (action) => {
           const next = await api.controlClock(action);
           setSnapshot(next);
@@ -119,6 +147,7 @@ export function App() {
               <DispatchChart snapshot={snapshot} />
               <ParetoControl
                 alpha={snapshot.pareto_alpha}
+                operatorReady={operatorReady}
                 onChange={async (alpha) => {
                   const next = await api.updatePareto(alpha);
                   setSnapshot(next);
@@ -129,6 +158,7 @@ export function App() {
               <AgentPanel
                 decisions={decisions}
                 anomalies={anomalies}
+                operatorReady={operatorReady}
                 onSubmitPolicy={async (msg) => {
                   const dec = await api.submitPolicy(msg);
                   await refreshAgentData();
