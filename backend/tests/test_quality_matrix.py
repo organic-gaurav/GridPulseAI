@@ -167,3 +167,8 @@ def test_constraint_patch_accepts_battery_reserve_boundaries():
 def test_constraint_patch_accepts_pareto_alpha_endpoints():
     assert ConstraintPatch(pareto_alpha=0).pareto_alpha == 0
     assert ConstraintPatch(pareto_alpha=1).pareto_alpha == 1
+
+
+def test_constraint_patch_rejects_pareto_alpha_below_zero():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(pareto_alpha=-0.01)
