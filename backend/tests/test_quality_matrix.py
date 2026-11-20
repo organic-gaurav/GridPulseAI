@@ -396,3 +396,10 @@ def test_photovoltaic_profile_is_zero_without_irradiance():
     twin = DualDigitalTwin()
     twin.irradiance_wm2 = [0.0] * 24
     assert twin.compute_pv_profile() == [0.0] * 24
+
+
+def test_photovoltaic_profile_reaches_rated_peak_at_reference_conditions():
+    twin = DualDigitalTwin()
+    twin.outdoor_temp_c = [25.0] * 24
+    twin.irradiance_wm2 = [1000.0] * 24
+    assert twin.compute_pv_profile() == [60.0] * 24
