@@ -382,3 +382,7 @@ def test_digital_twin_starts_paused():
 def test_digital_twin_initializes_twenty_four_hour_forecast_profiles():
     twin = DualDigitalTwin()
     assert len(twin.outdoor_temp_c) == len(twin.irradiance_wm2) == len(twin.carbon_intensity) == 24
+
+
+def test_digital_twin_initializes_three_thermal_zones():
+    assert len(DualDigitalTwin().zones) == 3
