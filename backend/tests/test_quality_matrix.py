@@ -340,3 +340,9 @@ def test_deterministic_parser_builds_wider_comfort_band():
 def test_deterministic_parser_marks_noncritical_load_shedding():
     patch = LLMClient()._deterministic_parse("shed noncritical batch loads")
     assert patch.shed_deferrable is True
+
+
+def test_deterministic_parser_uses_default_office_temperature_band():
+    patch = LLMClient()._deterministic_parse("set the office temperature")
+    assert patch.zone_temp_overrides["Zone A"].t_min == 21.0
+    assert patch.zone_temp_overrides["Zone A"].t_max == 23.5
