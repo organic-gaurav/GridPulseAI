@@ -369,3 +369,7 @@ async def test_policy_compiler_uses_local_parser_when_no_llm_client_is_configure
     client.client = None
     patch = await client.compile_policy("prioritize carbon")
     assert patch.pareto_alpha == 0.1
+
+
+def test_digital_twin_starts_at_eight_simulation_hours():
+    assert DualDigitalTwin().sim_hour == 8
