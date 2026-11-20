@@ -116,7 +116,7 @@ app.add_middleware(
 async def security_and_rate_limit(request: Request, call_next):
     path = request.url.path
     is_limited_path = path in _RATE_LIMIT_PATHS or path.startswith("/api/agent/decisions/")
-    if request.method == "POST" and is_limited_path:
+    if (request.method == "POST" and is_limited_path) or (request.method == "GET" and path == "/api/auth/check"):
         remote = request.client.host if request.client else "unknown"
         now = monotonic()
         bucket = _request_times[remote]
