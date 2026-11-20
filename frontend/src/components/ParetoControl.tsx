@@ -2,10 +2,11 @@ import { Sliders } from "lucide-react";
 
 interface Props {
   alpha: number;
+  operatorReady: boolean;
   onChange: (alpha: number) => void;
 }
 
-export function ParetoControl({ alpha, onChange }: Props) {
+export function ParetoControl({ alpha, operatorReady, onChange }: Props) {
   const modeLabel =
     alpha <= 0.25 ? "Carbon-Zero Priority" : alpha >= 0.75 ? "Cost-First Priority" : "Balanced Pareto";
 
@@ -31,6 +32,7 @@ export function ParetoControl({ alpha, onChange }: Props) {
       <input
         id="pareto-alpha"
         type="range"
+        disabled={!operatorReady}
         min={0}
         max={1}
         step={0.05}
