@@ -330,3 +330,8 @@ def test_deterministic_parser_builds_precooling_temperature_band():
     patch = LLMClient()._deterministic_parse("pre-cool Zone A before the afternoon")
     assert patch.zone_temp_overrides["Zone A"].t_min == 19.5
     assert patch.zone_temp_overrides["Zone A"].t_max == 23.0
+
+
+def test_deterministic_parser_builds_wider_comfort_band():
+    patch = LLMClient()._deterministic_parse("widen Zone A comfort band")
+    assert patch.zone_temp_overrides["Zone A"].t_max == 26.0
