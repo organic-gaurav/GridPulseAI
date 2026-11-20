@@ -49,3 +49,8 @@ def test_operator_token_alias_maps_to_gridpulse_api_token():
 def test_ai_mode_uses_deterministic_fallback_without_provider_key():
     configured = Settings(openai_api_key="", groq_api_key="", gemini_api_key="", _env_file=None)
     assert configured.ai_mode == "Deterministic Fallback"
+
+
+def test_ai_mode_reports_live_llm_when_provider_key_exists():
+    configured = Settings(openai_api_key="openai-test", _env_file=None)
+    assert configured.ai_mode == "Live LLM"
