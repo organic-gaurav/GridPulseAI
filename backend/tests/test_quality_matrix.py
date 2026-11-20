@@ -112,3 +112,8 @@ def test_ev_target_schema_accepts_departure_hour_boundaries():
 def test_ev_target_schema_rejects_departure_before_one():
     with pytest.raises(ValidationError):
         EVTargetOverride(departure_hour=0)
+
+
+def test_ev_target_schema_rejects_departure_after_twenty_three():
+    with pytest.raises(ValidationError):
+        EVTargetOverride(departure_hour=24)
