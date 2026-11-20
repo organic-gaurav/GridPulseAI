@@ -377,3 +377,8 @@ def test_digital_twin_starts_at_eight_simulation_hours():
 
 def test_digital_twin_starts_paused():
     assert DualDigitalTwin().is_running is False
+
+
+def test_digital_twin_initializes_twenty_four_hour_forecast_profiles():
+    twin = DualDigitalTwin()
+    assert len(twin.outdoor_temp_c) == len(twin.irradiance_wm2) == len(twin.carbon_intensity) == 24
