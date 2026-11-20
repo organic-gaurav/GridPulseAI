@@ -212,3 +212,8 @@ def test_policy_request_rejects_unrecognized_fields():
 def test_pareto_request_accepts_zero_and_one():
     assert ParetoUpdateRequest(alpha=0).alpha == 0
     assert ParetoUpdateRequest(alpha=1).alpha == 1
+
+
+def test_pareto_request_rejects_alpha_outside_unit_interval():
+    with pytest.raises(ValidationError):
+        ParetoUpdateRequest(alpha=1.001)
