@@ -464,3 +464,10 @@ def test_reset_fault_clears_active_chaos(monkeypatch):
     twin.active_chaos = ["heatwave", "cloudburst"]
     twin.inject_chaos("reset")
     assert twin.active_chaos == []
+
+
+def test_baseline_hour_returns_grid_hvac_and_ev_metrics():
+    twin = DualDigitalTwin()
+    result = twin.compute_baseline_hour(0, 0.0)
+    assert set(result) == {"grid_import_kw", "hvac_kw", "ev_kw"}
+    assert result["grid_import_kw"] >= 0
