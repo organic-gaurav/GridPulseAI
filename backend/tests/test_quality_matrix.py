@@ -131,7 +131,7 @@ def test_ev_target_schema_rejects_target_above_eighty_kwh():
 
 def test_constraint_patch_accepts_known_zone_identifier():
     patch = ConstraintPatch(zone_temp_overrides={"Zone A": {"t_min": 20.0}})
-    assert patch.zone_temp_overrides["Zone A"].t_min == 20.0
+    assert patch.zone_temp_overrides["Zone A"]["t_min"] == 20.0
 
 
 def test_constraint_patch_rejects_unknown_zone_identifier():
@@ -328,13 +328,13 @@ def test_deterministic_parser_clamps_high_battery_reserve_to_policy_ceiling():
 
 def test_deterministic_parser_builds_precooling_temperature_band():
     patch = LLMClient()._deterministic_parse("pre-cool Zone A before the afternoon")
-    assert patch.zone_temp_overrides["Zone A"].t_min == 19.5
-    assert patch.zone_temp_overrides["Zone A"].t_max == 23.0
+    assert patch.zone_temp_overrides["Zone A"]["t_min"] == 19.5
+    assert patch.zone_temp_overrides["Zone A"]["t_max"] == 23.0
 
 
 def test_deterministic_parser_builds_wider_comfort_band():
     patch = LLMClient()._deterministic_parse("widen Zone A comfort band")
-    assert patch.zone_temp_overrides["Zone A"].t_max == 26.0
+    assert patch.zone_temp_overrides["Zone A"]["t_max"] == 26.0
 
 
 def test_deterministic_parser_marks_noncritical_load_shedding():
@@ -344,18 +344,18 @@ def test_deterministic_parser_marks_noncritical_load_shedding():
 
 def test_deterministic_parser_uses_default_office_temperature_band():
     patch = LLMClient()._deterministic_parse("set the office temperature")
-    assert patch.zone_temp_overrides["Zone A"].t_min == 21.0
-    assert patch.zone_temp_overrides["Zone A"].t_max == 23.5
+    assert patch.zone_temp_overrides["Zone A"]["t_min"] == 21.0
+    assert patch.zone_temp_overrides["Zone A"]["t_max"] == 23.5
 
 
 def test_deterministic_parser_converts_evening_ev_departure_to_twenty_four_hour_time():
     patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
-    assert patch.ev_target_overrides["EV-1"].departure_hour == 18
+    assert patch.ev_target_overrides["EV-1"]["departure_hour"] == 18
 
 
 def test_deterministic_parser_sets_ev_target_for_fleet_request():
     patch = LLMClient()._deterministic_parse("fleet van departure by 6pm")
-    assert patch.ev_target_overrides["EV-1"].target_kwh == 55.0
+    assert patch.ev_target_overrides["EV-1"]["target_kwh"] == 55.0
 
 
 def test_deterministic_parser_keeps_unrecognized_request_as_summary():
