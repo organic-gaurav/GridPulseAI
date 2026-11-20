@@ -197,3 +197,8 @@ def test_policy_request_strips_surrounding_whitespace():
 def test_policy_request_rejects_one_character_message():
     with pytest.raises(ValidationError):
         PolicyRequest(message="x")
+
+
+def test_policy_request_rejects_message_over_five_hundred_chars():
+    with pytest.raises(ValidationError):
+        PolicyRequest(message="x" * 501)
