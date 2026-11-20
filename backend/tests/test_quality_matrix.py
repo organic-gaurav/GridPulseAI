@@ -517,3 +517,10 @@ def test_esg_csv_export_includes_expected_column_headers():
     rows = list(csv.reader(io.StringIO(ledger_to_csv([entry]))))
     assert rows[0][0] == "Hour"
     assert rows[0][-1] == "Carbon Avoided (kg CO2eq)"
+
+
+def test_esg_csv_export_serializes_one_ledger_record():
+    entry = EsgLedgerEntry(hour=3, opt_grid_kwh=10, base_grid_kwh=12, pv_kwh=4, opt_cost_usd=2, base_cost_usd=3, cost_saved_usd=1, opt_carbon_kg=5, base_carbon_kg=7, carbon_avoided_kg=2)
+    rows = list(csv.reader(io.StringIO(ledger_to_csv([entry]))))
+    assert len(rows) == 2
+    assert rows[1][0] == "3"
