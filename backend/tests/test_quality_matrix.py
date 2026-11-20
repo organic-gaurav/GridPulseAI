@@ -226,3 +226,8 @@ def test_pareto_request_rejects_non_finite_alpha():
 
 def test_chaos_request_accepts_reset_event():
     assert ChaosRequest(event="reset").event == "reset"
+
+
+def test_chaos_request_rejects_unknown_event():
+    with pytest.raises(ValidationError):
+        ChaosRequest(event="power_cut")
