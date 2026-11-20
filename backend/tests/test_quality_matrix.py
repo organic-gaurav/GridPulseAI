@@ -586,10 +586,13 @@ async def test_operator_access_does_not_trim_or_normalize_supplied_token(monkeyp
 
 
 @pytest.mark.asyncio
-async def test_operator_access_uses_constant_time_comparison_for_matching_token(monkeypatch):
+async def test_operator_access_token_comparison_is_case_sensitive(monkeypatch):
+    from fastapi import HTTPException
     monkeypatch.setattr(settings, "environment", "production")
-    monkeypatch.setattr(settings, "api_access_token", "gridpulse-operator-token")
-    await require_operator(SimpleNamespace(credentials="gridpulse-operator-token"))
+    monkeypatch.setattr(settings, "api_access_token", "Configured-Secret")
+    with pytest.raises(HTTPException) as error:
+        await require_operator(SimpleNamespace(credentials="configured-secret"))
+    assert error.value.status_code == 401
 
 
 @pytest.mark.asyncio
