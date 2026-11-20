@@ -172,3 +172,8 @@ def test_constraint_patch_accepts_pareto_alpha_endpoints():
 def test_constraint_patch_rejects_pareto_alpha_below_zero():
     with pytest.raises(ValidationError):
         ConstraintPatch(pareto_alpha=-0.01)
+
+
+def test_constraint_patch_rejects_pareto_alpha_above_one():
+    with pytest.raises(ValidationError):
+        ConstraintPatch(pareto_alpha=1.01)
