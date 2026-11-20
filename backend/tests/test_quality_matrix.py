@@ -304,3 +304,8 @@ def test_load_shedding_reason_is_specific_when_combined_with_zone_change():
 def test_deterministic_parser_prioritizes_carbon():
     patch = LLMClient()._deterministic_parse("prioritize carbon reduction")
     assert patch.pareto_alpha == 0.1
+
+
+def test_deterministic_parser_maps_cost_priority_to_high_alpha():
+    patch = LLMClient()._deterministic_parse("reduce the electricity bill and save money")
+    assert patch.pareto_alpha == 0.9
