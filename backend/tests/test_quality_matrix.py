@@ -54,3 +54,8 @@ def test_ai_mode_uses_deterministic_fallback_without_provider_key():
 def test_ai_mode_reports_live_llm_when_provider_key_exists():
     configured = Settings(openai_api_key="openai-test", _env_file=None)
     assert configured.ai_mode == "Live LLM"
+
+
+def test_openai_key_has_priority_over_other_provider_keys():
+    configured = Settings(openai_api_key="openai", groq_api_key="groq", gemini_api_key="gemini", _env_file=None)
+    assert configured.active_llm_key == "openai"
