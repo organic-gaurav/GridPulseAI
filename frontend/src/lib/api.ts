@@ -1,7 +1,12 @@
 import { AgentDecision, AnomalyItem, EsgLedgerEntry, TwinSnapshot } from "../types/grid";
 
+// Empty VITE_API_URL keeps local development working with the Vite proxy.
+// Render injects the backend's public URL at build time.
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+const endpoint = (path: string) => `${API_BASE_URL}${path}`;
+
 async function req<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(endpoint(url), {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
