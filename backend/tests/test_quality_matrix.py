@@ -496,3 +496,11 @@ def test_anomaly_detector_does_not_flag_grid_import_at_exact_threshold():
     schedule = [SimpleNamespace(grid_import_kw=55.0) for _ in range(9)]
     state = SimpleNamespace(active_chaos=[], sim_hour=8, schedule_24h=schedule, PV_PEAK_KW=60.0)
     assert AnomalyDetector().inspect(state) == []
+
+
+def test_anomaly_detector_flags_grid_import_above_threshold():
+    schedule = [SimpleNamespace(grid_import_kw=56.0) for _ in range(9)]
+    state = SimpleNamespace(active_chaos=[], sim_hour=8, schedule_24h=schedule, PV_PEAK_KW=60.0)
+    alerts = AnomalyDetector().inspect(state)
+    assert len(alerts) == 1
+    assert alerts[0].severity == "medium"
