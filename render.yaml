@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: gridpulse-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./gridpulse.db
+      - key: SIM_TICK_SECONDS
+        value: "3.0"
+      - key: LATITUDE
+        value: "51.5074"
+      - key: LONGITUDE
+        value: "-0.1278"
+      - key: CARBON_PROVIDER
+        value: uk_carbon
+
+  - type: web
+    name: gridpulse-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_WS_URL
+        sync: false
