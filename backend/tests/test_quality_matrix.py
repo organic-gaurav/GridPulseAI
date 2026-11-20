@@ -275,3 +275,9 @@ def test_deferrable_load_shedding_requires_human_approval():
     tier, impact, _ = SafetyGuardrail().classify_and_validate(ConstraintPatch(shed_deferrable=True))
     assert tier == 2
     assert "Shedding" in impact
+
+
+def test_battery_reserve_only_patch_remains_tier_one():
+    tier, _, patch = SafetyGuardrail().classify_and_validate(ConstraintPatch(battery_min_soc_pct=35))
+    assert tier == 1
+    assert patch.battery_min_soc_pct == 35
