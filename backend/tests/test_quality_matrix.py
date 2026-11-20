@@ -64,3 +64,8 @@ def test_openai_key_has_priority_over_other_provider_keys():
 def test_groq_key_is_selected_when_openai_key_is_missing():
     configured = Settings(groq_api_key="groq", gemini_api_key="gemini", _env_file=None)
     assert configured.active_llm_key == "groq"
+
+
+def test_gemini_key_is_selected_when_other_provider_keys_are_missing():
+    configured = Settings(gemini_api_key="gemini", _env_file=None)
+    assert configured.active_llm_key == "gemini"
