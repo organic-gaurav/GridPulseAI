@@ -330,21 +330,24 @@ class DualDigitalTwin:
 
     def apply_constraint_patch(self, patch: ConstraintPatch) -> None:
         if patch.zone_temp_overrides:
-            for z in self.zones:
-                if z["zone_id"] in patch.zone_temp_overrides:
-                    ov = patch.zone_temp_overrides[z["zone_id"]]
-                    if "t_min" in ov:
-                        z["t_min"] = max(16.0, min(26.0, float(ov["t_min"])))
-                    if "t_max" in ov:
-                        z["t_max"] = max(18.0, min(28.0, float(ov["t_max"])))
+            for zone in self.zones:
+                override = patch.zone_temp_overrides.get(zone["zone_id"])
+                if override is None:
+                    continue
+                if override.t_min is not None:
+                    zone["t_min"] = override.t_min
+                if override.t_max is not None:
+                    zone["t_max"] = override.t_max
+
         if patch.ev_target_overrides:
-            for ev in self.ev_chargers:
-                if ev["charger_id"] in patch.ev_target_overrides:
-                    ov = patch.ev_target_overrides[ev["charger_id"]]
-                    if "departure_hour" in ov:
-                        ev["departure_hour"] = int(max(1, min(23, ov["departure_hour"])))
-                    if "target_kwh" in ov:
-                        ev["target_kwh"] = float(max(10.0, min(80.0, ov["target_kwh"])))
+            for charger in self.ev_chargers:
+                override = patch.ev_target_overrides.get(charger["charger_id"])
+                if override is None:
+                    continue
+                if override.departure_hour is not None:
+                    charger["departure_hour"] = override.departure_hour
+                if override.target_kwh is not None:
+                    charger["target_kwh"] = override.target_kwh
         if patch.battery_min_soc_pct is not None:
             self.min_soc_pct = patch.battery_min_soc_pct
         if patch.pareto_alpha is not None:
