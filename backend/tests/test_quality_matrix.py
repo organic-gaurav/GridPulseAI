@@ -309,3 +309,8 @@ def test_deterministic_parser_prioritizes_carbon():
 def test_deterministic_parser_maps_cost_priority_to_high_alpha():
     patch = LLMClient()._deterministic_parse("reduce the electricity bill and save money")
     assert patch.pareto_alpha == 0.9
+
+
+def test_deterministic_parser_extracts_battery_reserve_percentage():
+    patch = LLMClient()._deterministic_parse("set battery reserve to 30%")
+    assert patch.battery_min_soc_pct == 30.0
