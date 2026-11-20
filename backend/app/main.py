@@ -47,14 +47,20 @@ async def lifespan(app: FastAPI):
     task = asyncio.create_task(simulation_loop())
     yield
     task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(title="GridPulse AI", version="1.0.0", lifespan=lifespan)
 
+# The frontend is hosted separately. The app uses no cookie-based auth,
+# so wildcard origins are sufficient for its public demo API.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -63,6 +69,16 @@ app.include_router(routes_twin.router)
 app.include_router(routes_optimizer.router)
 app.include_router(routes_agent.router)
 app.include_router(routes_esg.router)
+
+
+@app.get("/")
+async def root():
+    return {
+        "service": "GridPulse AI API",
+        "status": "running",
+        "health": "/api/health",
+        "docs": "/docs",
+    }
 
 
 @app.get("/api/health")
