@@ -241,3 +241,8 @@ def test_clock_request_accepts_each_documented_action():
 def test_clock_request_rejects_unknown_action():
     with pytest.raises(ValidationError):
         ClockControlRequest(action="fast_forward")
+
+
+def test_clock_request_accepts_tick_interval_endpoints():
+    assert ClockControlRequest(action="play", tick_seconds=0.5).tick_seconds == 0.5
+    assert ClockControlRequest(action="play", tick_seconds=10).tick_seconds == 10
